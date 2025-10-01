@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Egg of Legends Fixed8</title>
+<style>
+  body {
+    font-family: 'Trebuchet MS', sans-serif;
+    margin: 0;
+    text-align: center;
+    overflow-x: hidden;
+    background: radial-gradient(ellipse at top, #2a0055, #000822);
+    color: #fff;
+  }
+  h1 {
+    margin: 10px;
+    font-size: 28px;
+    text-shadow: 0 0 10px #fff, 0 0 20px #9a7cff;
+  }
+  #subtitle {
+    font-size: 14px;
+    margin-top: -10px;
+    color: #ccc;
+  }
+  #coinsDisplay {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    font-size: 16px;
+    background: #222;
+    padding: 6px 10px;
+    border-radius: 8px;
+    z-index: 2;
+  }
+  #settings {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    font-size: 20px;
+    z-index: 2;
+  }
+  #egg {
+    width: 150px;
+    height: 205px;
+    margin: 18px auto;
+    border-radius: 50%/60%;
+    background: radial-gradient(circle at 50% 30%, #ffffff, #d9d9e6 70%, #c9c9d8);
+    box-shadow: 0 0 18px #0008, 0 0 30px #0004 inset;
+    cursor: pointer;
+    transition: transform .08s;
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+  }
+  #egg:active { transform: scale(.96); }
+  #egg.diamond {
+    background: radial-gradient(circle at 50% 30%, #dff8ff, #b4e1ff 65%, #96d3ff);
+    box-shadow: 0 0 18px #00f7ff, 0 0 30px #9ff inset, 0 0 30px #0ff;
+  }
+  #counter { font-size: 18px; margin: 6px 0 12px; }
+  button {
+    background: #262738;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 6px;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.1); }
+  #popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    flex-direction: column;
+  }
+  #popup .card { width: 240px; height: 260px; font-size: 16px; }
+  .card {
+    width: 128px;
+    height: 158px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    border: 4px solid #555;
+    border-radius: 12px;
+    margin: 6px;
+    background: #111;
+    font-size: 12px;
+    color: #fff;
+    flex-direction: column;
+    padding: 4px;
+    gap: 4px;
+    position: relative;
+    z-index: 1;
+  }
+  .card svg {
+    margin-top: 4px;
+  }
+  .have { background: #194a19; }
+  .missing { background: #5b1a1a; }
+  table { margin: auto; border-collapse: collapse; color: #fff; }
+  th, td { border: 1px solid #666; padding: 4px 8px; }
+  #shopPopup, #helpPopup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+    flex-direction: column;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  #background {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #fff;
+    border-radius: 50%;
+    opacity: .8;
+  }
+  .rune {
+    position: absolute;
+    font-size: 30px;
+    color: rgba(255,255,255,.08);
+    transform: rotate(-20deg);
+  }
+</style>
+</head>
+<body>
+<div id="background"></div>
+<h1>✨ Egg of Legends ✨</h1>
+<p id="subtitle">Finde alle Runen der mystischen verschollenen Kreaturen.<br>Sammle sie alle, um das geheimnisvolle <b>Diamant-Ei</b> freizuschalten.</p>
+<div id="coinsDisplay">🪙 <span id="coinsNum">0</span></div>
+<div id="settings" onclick="openSettings()">⚙️</div>
+
+<div id="egg" onclick="addClicks(clickPower)"></div>
+<div id="counter">Klicke 100× auf das Ei</div>
+
+<div id="popup">
+  <div id="popupCard" class="card"></div>
+  <button onclick="closePopup()">OK</button>
+</div>
+
+<button onclick="toggleIndex()">Legend Index anzeigen</button>
+<button id="diamondBtn" onclick="toggleDiamondIndex()" style="display:none;">Diamant Index anzeigen</button>
+<button onclick="openShop()">Shop öffnen</button>
+
+<div id="indexView"></div>
+<div id="diamondIndexView"></div>
+
+<h2>Sammlung</h2>
+<div id="collection"></div>
+
+<div>
+  <h2>Code einlösen</h2>
+  <input type="text" id="redeem-code" placeholder="Code eingeben">
+  <button onclick="redeemCode()">Einlösen</button>
+</div>
+
+<div id="shopPopup">
+  <h2>🛒 Shop</h2>
+  <p>Münzen: <span id="shopCoins">0</span></p>
+  <button id="btnPow" onclick="buyClickPower()">+0.5 Klickkraft (250)</button>
+  <button onclick="buyInstant()">Ei sofort öffnen (50)</button>
+  <button id="btnAuto" onclick="buyAutoClick()">Auto-Clicker (1000)</button>
+  <button id="btnDouble" onclick="buyDouble()">Doppelte Münzen (500)</button>
+  <button id="btnRune" onclick="buyRune()">Glücks-Rune (750)</button>
+  <button id="btnAlbum" onclick="buyAlbum()">Sammlungs-Upgrade (300)</button>
+  <button id="btnFast" onclick="buyFast()">Schneller Brüter (200)</button>
+  <button onclick="closeShop()">Schließen</button>
+</div>
+
+<div id="helpPopup">
+  <h2>📖 Anleitung</h2>
+  <ul style="text-align:left;max-width:500px;">
+    <li>Tippe auf das Ei (100× Legend, 250× Diamant).</li>
+    <li>Seltenheiten: Normal → Bronze → Silber → Gold → Platin. Diamant → Rubin → Smaragd → Rainbow.</li>
+    <li>Doppelte Kreaturen geben Münzen (beim Klicken). Bei Codes keine Münzen.</li>
+    <li>Index zeigt welche fehlen (Tabelle), Sammlung zeigt gefundene mit Codes.</li>
+    <li>Shop: Klickkraft (+0.5 bis max 5), Sofort öffnen, Auto-Clicker, Doppelte Münzen, Glücks-Rune, Sammlungs-Upgrade, Schneller Brüter (max 3×).</li>
+    <li>⚙️ Menü: Zurücksetzen oder Anleitung öffnen.</li>
+  </ul>
+  <button onclick="closeHelp()">Schließen</button>
+</div>
+
+<script>
+  // ---------------- Daten ----------------
+const raritiesLegend = ["Normal","Bronze","Silber","Gold","Platin"];
+const raritiesDiamond = ["Diamant","Rubin","Smaragd","Rainbow"];
+
+const rarityColors = {
+  "Normal":"#aaa","Bronze":"#cd7f32","Silber":"#c0c0c0","Gold":"#ffd700","Platin":"#e5e4e2",
+  "Diamant":"#b9f2ff","Rubin":"#e0115f","Smaragd":"#50c878","Rainbow":"url(#rainbowGrad)"
+};
+
+// SVG-Silhouetten pro Kreatur
+function getSilhouette(name,color){
+  let svg = "";
+  if(name==="Donnerlöwe") svg=`<svg width="40" height="40"><polygon points="20,2 38,38 2,38" fill="${color}"/></svg>`;
+  else if(name==="Wasserwyrm") svg=`<svg width="40" height="40"><ellipse cx="20" cy="20" rx="16" ry="8" fill="${color}"/></svg>`;
+  else if(name==="Steingolem") svg=`<svg width="40" height="40"><rect x="8" y="8" width="24" height="24" fill="${color}"/></svg>`;
+  else if(name==="Kosmosgeist") svg=`<svg width="40" height="40"><circle cx="20" cy="20" r="15" stroke="${color}" stroke-width="3" fill="none"/></svg>`;
+  else if(name==="Feuerdrache") svg=`<svg width="40" height="40"><path d="M5 30 Q20 5 35 30 Z" fill="${color}"/></svg>`;
+  else if(name==="Nebelgeist") svg=`<svg width="40" height="40"><ellipse cx="20" cy="20" rx="12" ry="16" fill="${color}" opacity="0.7"/></svg>`;
+  else if(name==="Sturmfalke") svg=`<svg width="40" height="40"><path d="M2 20 H38 L20 5 Z" fill="${color}"/></svg>`;
+  else if(name==="Erdtroll") svg=`<svg width="40" height="40"><rect x="10" y="10" width="20" height="20" rx="6" fill="${color}"/></svg>`;
+  else if(name==="Mondkatze") svg=`<svg width="40" height="40"><circle cx="15" cy="15" r="8" fill="${color}"/><circle cx="25" cy="15" r="8" fill="${color}"/></svg>`;
+  else if(name==="Kristallfuchs") svg=`<svg width="40" height="40"><polygon points="20,5 35,30 5,30" fill="${color}"/></svg>`;
+  // Diamant-Ei Kreaturen
+  else if(name==="Auroraphoenix") svg=`<svg width="40" height="40"><path d="M20 5 Q35 20 20 35 Q5 20 20 5Z" fill="${color}"/></svg>`;
+  else if(name==="Schattenhydra") svg=`<svg width="40" height="40"><circle cx="12" cy="20" r="6" fill="${color}"/><circle cx="28" cy="20" r="6" fill="${color}"/><circle cx="20" cy="28" r="6" fill="${color}"/></svg>`;
+  else if(name==="Lichtgeist") svg=`<svg width="40" height="40"><circle cx="20" cy="20" r="10" fill="${color}" opacity="0.8"/></svg>`;
+  else if(name==="Runengolem") svg=`<svg width="40" height="40"><rect x="6" y="6" width="28" height="28" stroke="${color}" stroke-width="3" fill="none"/></svg>`;
+  else if(name==="Traumwolf") svg=`<svg width="40" height="40"><polygon points="5,35 20,5 35,35" fill="${color}"/></svg>`;
+  else if(name==="Zeitdrache") svg=`<svg width="40" height="40"><path d="M10 20 A10 10 0 1 0 30 20" stroke="${color}" stroke-width="3" fill="none"/></svg>`;
+  else if(name==="Seelenkatze") svg=`<svg width="40" height="40"><circle cx="12" cy="20" r="8" fill="${color}"/><circle cx="28" cy="20" r="8" fill="${color}"/></svg>`;
+  else if(name==="Regenbogenhirsch") svg=`<svg width="40" height="40"><path d="M10 30 Q20 5 30 30" stroke="${color}" stroke-width="3" fill="none"/></svg>`;
+  else if(name==="Flammengeist") svg=`<svg width="40" height="40"><path d="M20 5 Q30 20 20 35 Q10 20 20 5Z" fill="${color}"/></svg>`;
+  else if(name==="Frostwyrm") svg=`<svg width="40" height="40"><polygon points="20,5 35,20 20,35 5,20" fill="${color}"/></svg>`;
+  else svg=`<svg width="40" height="40"><circle cx="20" cy="20" r="12" fill="${color}"/></svg>`;
+  return svg;
+}
+
+// Kreaturen-Listen
+const legendCreatures = ["Donnerlöwe","Wasserwyrm","Steingolem","Kosmosgeist","Feuerdrache","Nebelgeist","Sturmfalke","Erdtroll","Mondkatze","Kristallfuchs"];
+const diamondCreatures = ["Auroraphoenix","Schattenhydra","Lichtgeist","Runengolem","Traumwolf","Zeitdrache","Seelenkatze","Regenbogenhirsch","Flammengeist","Frostwyrm"];
+
+// ---------------- Variablen ----------------
+let clicks=0, clickPower=1, eggType="legend";
+let coins=0, collection=[], redeemedCodes=[];
+let autoClick=false, doubleCoins=false, fastHatch=0;
+
+// ---------------- Funktionen ----------------
+function addClicks(amount){
+  clicks += amount;
+  let needed = eggType==="legend" ? (100-Math.min(fastHatch,3)*20) : (250-Math.min(fastHatch,3)*50);
+  if(clicks>=needed){ hatch(); clicks=0; }
+  updateCounter();
+}
+function updateCounter(){
+  let needed = eggType==="legend" ? (100-Math.min(fastHatch,3)*20) : (250-Math.min(fastHatch,3)*50);
+  document.getElementById("counter").innerText=`Klicke ${needed-clicks}× auf das Ei`;
+}
+function hatch(){
+  let pool = eggType==="legend"? legendCreatures:diamondCreatures;
+  let rarities = eggType==="legend"? raritiesLegend:raritiesDiamond;
+  let creature = pool[Math.floor(Math.random()*pool.length)];
+  let rarity = rarities[Math.floor(Math.random()*rarities.length)];
+  let code = `${creature.toUpperCase()}-${rarity.toUpperCase()}-${Math.random().toString(36).substring(2,8).toUpperCase()}`;
+  let exists = collection.find(c=>c.name===creature && c.rarity===rarity);
+  if(exists){ coins+=10; alert("Doppelt! +10 Münzen"); }
+  else { collection.push({name:creature,rarity,code}); showPopup(creature,rarity,code); }
+  updateCollection(); updateCoins();
+  if(collection.filter(c=>legendCreatures.includes(c.name)).length>=legendCreatures.length*raritiesLegend.length) 
+    document.getElementById("diamondBtn").style.display="inline-block";
+}
+function showPopup(name,rarity,code){
+  let card = document.getElementById("popupCard");
+  card.innerHTML=`${getSilhouette(name,rarityColors[rarity])}<b>${name}</b><br>${rarity}<br>${code}`;
+  document.getElementById("popup").style.display="flex";
+}
+function closePopup(){ document.getElementById("popup").style.display="none"; }
+function updateCollection(){
+  let div=document.getElementById("collection");
+  div.innerHTML="";
+  collection.forEach(c=>{
+    div.innerHTML+=`<div class="card">${getSilhouette(c.name,rarityColors[c.rarity])}<b>${c.name}</b><br>${c.rarity}<br><small>${c.code}</small></div>`;
+  });
+}
+function redeemCode(){
+  let val=document.getElementById("redeem-code").value.trim();
+  if(!val) return;
+  if(redeemedCodes.includes(val)) {alert("Code schon benutzt");return;}
+  let parts=val.split("-");
+  if(parts.length>=3){
+    let name=parts[0].charAt(0)+parts[0].slice(1).toLowerCase();
+    let rarity=parts[1].charAt(0)+parts[1].slice(1).toLowerCase();
+    let exists=collection.find(c=>c.code===val);
+    if(exists){ alert("Schon vorhanden"); }
+    else {
+      collection.push({name:parts[0],rarity:parts[1],code:val});
+      redeemedCodes.push(val);
+      updateCollection();
+    }
+  }
+}
+
+// Shop
+function openShop(){document.getElementById("shopPopup").style.display="flex";document.getElementById("shopCoins").innerText=coins;}
+function closeShop(){document.getElementById("shopPopup").style.display="none";}
+function updateCoins(){document.getElementById("coinsNum").innerText=coins;document.getElementById("shopCoins").innerText=coins;}
+function buyClickPower(){ if(clickPower>=5){alert("Max erreicht");return;} if(coins>=250){coins-=250;clickPower+=0.5;} updateCoins();}
+function buyInstant(){ if(coins>=50){coins-=50;hatch();} updateCoins();}
+function buyAutoClick(){ if(autoClick){alert("Schon gekauft");return;} if(coins>=1000){coins-=1000;autoClick=true;setInterval(()=>addClicks(clickPower),1000);} updateCoins();}
+function buyDouble(){ if(doubleCoins){alert("Schon gekauft");return;} if(coins>=500){coins-=500;doubleCoins=true;} updateCoins();}
+function buyRune(){ if(coins>=750){coins-=750;alert("Glücks-Rune aktiv!");} updateCoins();}
+function buyAlbum(){ if(coins>=300){coins-=300;alert("Sammlungs-Upgrade!");} updateCoins();}
+function buyFast(){ if(fastHatch>=3){alert("Max Brüter erreicht");return;} if(coins>=200){coins-=200;fastHatch++;} updateCoins(); }
+
+// Index
+function toggleIndex(){
+  let div=document.getElementById("indexView");
+  if(div.innerHTML){div.innerHTML="";return;}
+  let html="<table><tr><th>Kreatur</th>";
+  raritiesLegend.forEach(r=>html+=`<th>${r}</th>`); html+="</tr>";
+  legendCreatures.forEach(cr=>{
+    html+=`<tr><td>${getSilhouette(cr,"#888")} ${cr}</td>`;
+    raritiesLegend.forEach(r=>{
+      let found=collection.find(c=>c.name===cr && c.rarity===r);
+      html+=`<td>${found?"✔️":"❌"}</td>`;
+    });
+    html+="</tr>";
+  });
+  html+="</table>"; div.innerHTML=html;
+}
+function toggleDiamondIndex(){
+  let div=document.getElementById("diamondIndexView");
+  if(div.innerHTML){div.innerHTML="";return;}
+  let html="<table><tr><th>Kreatur</th>";
+  raritiesDiamond.forEach(r=>html+=`<th>${r}</th>`); html+="</tr>";
+  diamondCreatures.forEach(cr=>{
+    html+=`<tr><td>${getSilhouette(cr,"#888")} ${cr}</td>`;
+    raritiesDiamond.forEach(r=>{
+      let found=collection.find(c=>c.name===cr && c.rarity===r);
+      html+=`<td>${found?"✔️":"❌"}</td>`;
+    });
+    html+="</tr>";
+  });
+  html+="</table>"; div.innerHTML=html;
+}
+
+// Settings / Hilfe
+function openSettings(){ if(confirm("Spiel zurücksetzen?")){collection=[];coins=0;clickPower=1;updateCollection();updateCoins();} else {document.getElementById("helpPopup").style.display="flex";}}
+function closeHelp(){document.getElementById("helpPopup").style.display="none";}
+
+// Hintergrund
+function createBackground(){
+  let bg=document.getElementById("background");
+  for(let i=0;i<60;i++){
+    let star=document.createElement("div"); star.className="star";
+    star.style.top=Math.random()*100+"%"; star.style.left=Math.random()*100+"%";
+    bg.appendChild(star);
+  }
+  let runes=["ᚠ","ᚢ","ᚦ","ᚨ","ᚱ","ᚲ","ᛃ","ᛇ","ᛈ","ᛉ"];
+  for(let i=0;i<15;i++){
+    let span=document.createElement("div"); span.className="rune";
+    span.innerText=runes[Math.floor(Math.random()*runes.length)];
+    span.style.top=Math.random()*100+"%"; span.style.left=Math.random()*100+"%";
+    bg.appendChild(span);
+  }
+}
+createBackground();
+updateCounter();
+updateCoins();
+</script>
+</body>
+</html>
